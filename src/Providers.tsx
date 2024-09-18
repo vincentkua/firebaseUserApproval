@@ -1,18 +1,14 @@
-import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import UserLogin from "./pages/UserLogin";
 import UserSignup from "./pages/UserSignup";
+import Navbar from "./utils/Navbar";
 
 const Providers = () => {
   return (
     <>
       <BrowserRouter>
-        <div style={{ display: "flex", flexDirection: "row", gap: "10px" }}>
-          <Link to={"/"}>Home</Link>
-          <Link to={"/login"}>Login</Link>
-          <Link to={"/signup"}>Signup</Link>
-        </div>
-
+        <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<UserLogin />} />
