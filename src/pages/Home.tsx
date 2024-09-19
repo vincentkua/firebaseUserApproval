@@ -1,20 +1,27 @@
 import { useEffect, useState } from "react";
 import useAuthNavigator from "../utils/useAuthNavigator";
-import { doc, getDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  collection,
+  addDoc,
+  deleteDoc,
+  onSnapshot,
+} from "firebase/firestore";
 import { auth, db } from "../../firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
 
 const Home = () => {
-  // Manage the approved status state
   const [approved, setApproved] = useState<boolean | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [todos, setTodos] = useState<{ id: string; text: string }[]>([]);
+  const [newTodo, setNewTodo] = useState("");
 
   useAuthNavigator("/", "/login");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        //Check firestore for user approval status
         try {
           const userDocRef = doc(db, "users", currentUser.uid);
           const userDoc = await getDoc(userDocRef);
@@ -22,33 +29,86 @@ const Home = () => {
           if (userDoc.exists()) {
             setApproved(userDoc.data()?.approved || false);
           } else {
-            setApproved(false); // Default to false if user document doesn't exist
+            setApproved(false);
           }
         } catch (error: any) {
-          alert(error.message);
+          console.error("Error getting User Approval Status:", error);
         }
-        //Check if 'admin' claim
+
         try {
           const tokenResult = await currentUser.getIdTokenResult();
           setIsAdmin(!!tokenResult.claims.admin);
         } catch (error) {
-          console.error("Error getting ID token:", error);
+          console.error("Error getting Admin Status:", error);
           setIsAdmin(false);
         }
+
+        // Listen to to-do items in Firestore
+        try {
+          const todosRef = collection(db, "users", currentUser.uid, "todos");
+
+          const unsubscribeTodos = onSnapshot(
+            todosRef,
+            (snapshot) => {
+              const todosData = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+              }));
+              setTodos(todosData as { id: string; text: string }[]);
+            },
+            (error) => {
+              console.error("Error getting TODO data:", error);
+            }
+          );
+
+          return () => {
+            unsubscribeTodos();
+          };
+        } catch (error) {
+          console.error("Error setting up TODO listener:", error);
+        }
       } else {
-        setApproved(false); // Default to false if no user is authenticated
-        setIsAdmin(false); // Default to false if no user is authenticated
+        setApproved(false);
+        setIsAdmin(false);
+        setTodos([]);
       }
     });
-    return () => unsubscribe(); // Cleanup on component unmount
+
+    return () => unsubscribe();
   }, []);
+
+  const addTodo = async () => {
+    if (!newTodo.trim()) return;
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      try {
+        const todosRef = collection(db, "users", currentUser.uid, "todos");
+        await addDoc(todosRef, { text: newTodo });
+        setNewTodo("");
+      } catch (error) {
+        console.error("Error adding todo:", error);
+      }
+    }
+  };
+
+  const deleteTodo = async (todoId: string) => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      try {
+        const todoDocRef = doc(db, "users", currentUser.uid, "todos", todoId);
+        await deleteDoc(todoDocRef);
+      } catch (error) {
+        console.error("Error deleting todo:", error);
+      }
+    }
+  };
 
   return (
     <>
       <h4>Home Page</h4>
       <p>Note: Will navigate to login page if user is not logged in!</p>
       <p>
-        Account Approval :{" "}
+        Account Approval:{" "}
         {approved === null
           ? "Loading..."
           : approved
@@ -56,9 +116,32 @@ const Home = () => {
           : "Not Approved"}
       </p>
       <p>
-        Admin Right :{" "}
+        Admin Right:{" "}
         {isAdmin === null ? "Loading..." : isAdmin ? "True" : "False"}
       </p>
+      <hr />
+
+      <h4>To-Do App</h4>
+      <input
+        type="text"
+        value={newTodo}
+        onChange={(e) => setNewTodo(e.target.value)}
+        placeholder="New to-do item"
+      />
+      <button onClick={addTodo}>Add</button>
+      <ul>
+        {todos.map((todo) => (
+          <li key={todo.id}>
+            {todo.text}{" "}
+            <button onClick={() => deleteTodo(todo.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+      {!approved && (
+        <p style={{ color: "red" }}>
+          Please contact admin for user approval!!!
+        </p>
+      )}
     </>
   );
 };
