@@ -1,4 +1,8 @@
+import useAuthNavigator from "../utils/useAuthNavigator";
+
 const Home = () => {
+  useAuthNavigator("/", "/login");
+
   return (
     <>
       <h4>Home Page</h4>

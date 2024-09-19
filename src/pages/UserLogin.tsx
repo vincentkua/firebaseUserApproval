@@ -1,11 +1,12 @@
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../firebaseConfig";
 import { useEffect, useState } from "react";
+import useAuthNavigator from "../utils/useAuthNavigator";
 
 const UserLogin = () => {
   const [signinEmail, setSigninEmail] = useState<string>("");
   const [signinPassword, setSigninPassword] = useState<string>("");
-  
+
   const signIn = async () => {
     try {
       const userCredential = await signInWithEmailAndPassword(
@@ -19,16 +20,14 @@ const UserLogin = () => {
       alert(error.message);
     }
   };
+  useEffect(() => {}, []);
 
-  useEffect(()=>{
-
-  },[])
-
+  useAuthNavigator("/", "/login");
 
   return (
     <>
       <h4>Login Page</h4>
-      <p>Note: Will navigate to home page is user was logged in</p>
+      <p>Note: Will navigate to home page if user was logged in</p>
 
       <input
         type="text"
@@ -45,7 +44,6 @@ const UserLogin = () => {
       />
       <br />
       <button onClick={signIn}>Sign In</button>
-      
     </>
   );
 };

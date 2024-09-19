@@ -1,20 +1,14 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { auth } from "../../firebaseConfig";
-import { useNavigate } from "react-router-dom";
 
-const AuthValidator = () => {
+const AuthStatus = () => {
   const [user, setUser] = useState<User | null>(null); // Type is User or null
-  const navigate = useNavigate();
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser); // currentUser can be null, so we allow that in the state
-      if (currentUser) {
-        navigate("/");
-      } else {
-        navigate("/login");
-      }
     });
     return () => unsubscribe(); // Cleanup on component unmount
   }, []);
@@ -39,4 +33,4 @@ const AuthValidator = () => {
   );
 };
 
-export default AuthValidator;
+export default AuthStatus;

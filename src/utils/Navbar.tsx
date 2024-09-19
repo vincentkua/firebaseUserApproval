@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import AuthValidator from "./AuthValidator";
+import AuthStatus from "./AuthStatus";
 
 const Navbar = () => {
   return (
@@ -7,7 +7,7 @@ const Navbar = () => {
       <Link to={"/"}>Home</Link>
       <Link to={"/login"}>Login</Link>
       <Link to={"/signup"}>Signup</Link>
-      <AuthValidator />
+      <AuthStatus />
     </div>
   );
 };
