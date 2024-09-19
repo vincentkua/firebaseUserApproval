@@ -9,10 +9,8 @@ const useAuthNavigator = (pathvalid: string, pathfailed: string) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        alert("Welcome back!!!");
         navigate(pathvalid);
       } else {
-        alert("Please Login to Continue!!!");
         navigate(pathfailed);
       }
     });
